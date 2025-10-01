@@ -1,0 +1,22 @@
+# Moverly Backend 🚚⚡
+
+Backend del proyecto **Moverly**, desarrollado con [FastAPI](https://fastapi.tiangolo.com/).  
+Se encarga de gestionar la lógica del negocio, la comunicación con la base de datos y proveer APIs para el frontend.
+
+---
+
+## 🚀 Tecnologías
+- [Python 3.10+](https://www.python.org/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [Uvicorn](https://www.uvicorn.org/) (servidor ASGI)
+- [SQLAlchemy](https://www.sqlalchemy.org/) o [Tortoise ORM](https://tortoise.github.io/) (según tu proyecto)
+- [Pydantic](https://docs.pydantic.dev/) (validaciones)
+
+---
+
+## 📦 Instalación
+
+### 1. Clonar repositorio
+```bash
+git clone https://github.com/TU-USUARIO/moverly-backend.git
+cd moverly-backend
