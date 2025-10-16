@@ -399,6 +399,91 @@ curl -X GET http://localhost:8000/users/me \
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+## Ejecución local (Windows — PowerShell)
+
+Estos pasos rápidos permiten levantar la base de datos en Docker, aplicar migraciones, poblar datos de ejemplo y ejecutar el backend en desarrollo.
+
+Ejecuta cada bloque desde la raíz del repositorio.
+
+1) Levantar PostgreSQL con Docker
+
+```powershell
+# Levanta el servicio de Postgres definido en docker-compose.yml
+docker compose up -d db
+docker compose ps
+docker compose logs -f db
+```
+
+2) Preparar el archivo de entorno
+
+```powershell
+# Copia el .env de ejemplo que ya apunta al contenedor Docker
+Copy-Item .env.docker .env -Force
+```
+
+3) Crear y activar el entorno virtual
+
+```powershell
+python -m venv .\venv
+.\venv\Scripts\Activate.ps1
+```
+
+4) Instalar dependencias
+
+```powershell
+.\venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+5) Ejecutar migraciones (Alembic)
+
+```powershell
+.\venv\Scripts\python.exe -m alembic upgrade head
+```
+
+6) Poblar datos de prueba (opcional)
+
+```powershell
+.\venv\Scripts\python.exe scripts\seed_data.py
+```
+
+7) Ejecutar la aplicación (Uvicorn)
+
+```powershell
+.\venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+8) Documentación (Swagger / ReDoc)
+
+- Swagger UI: http://127.0.0.1:8000/docs
+- ReDoc: http://127.0.0.1:8000/redoc
+
+Comprobaciones rápidas
+
+```powershell
+# Ver tablas en la base de datos
+docker compose exec db psql -U postgres -d moverly -c "\dt"
+
+# Obtener token (ejemplo) — si el endpoint OAuth2 está disponible:
+curl -X POST "http://127.0.0.1:8000/auth/token" -H "Content-Type: application/x-www-form-urlencoded" -d "username=cliente@example.com&password=password123"
+```
+
+Notas y resolución de problemas
+
+- Si la instalación de dependencias falla por paquetes nativos en Windows, instala Visual C++ Build Tools o usa WSL/Docker.
+- Si Swagger no autoriza con el diálogo (botón candado), prueba primero con `POST /auth/login` (JSON) para obtener un token y usa el header `Authorization: Bearer <token>`.
+- Para automatizar migraciones y seed dentro de Docker puedes usar el servicio `db-init` definido en `docker-compose.yml`:
+
+```powershell
+docker compose run --rm db-init
+```
+
+Credenciales de prueba (seed)
+
+- cliente@example.com / password123
+- conductor@example.com / password123
+- admin@example.com / password123
+
 ### Producción
 
 ```bash
