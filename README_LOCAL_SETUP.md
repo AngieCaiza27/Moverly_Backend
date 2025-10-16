@@ -40,5 +40,3 @@ pip install -r requirements.txt
 # Abrir la documentación Swagger en el navegador
 Start-Process 'http://127.0.0.1:8000/docs'
 ```
-
-Si quieres, puedo añadir scripts de PowerShell para automatizar estos pasos.
