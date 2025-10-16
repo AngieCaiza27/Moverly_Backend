@@ -1,22 +1,590 @@
-# Moverly Backend 🚚⚡
+# Moverly Backend
 
-Backend del proyecto **Moverly**, desarrollado con [FastAPI](https://fastapi.tiangolo.com/).  
-Se encarga de gestionar la lógica del negocio, la comunicación con la base de datos y proveer APIs para el frontend.
+Backend Moverly - Plataforma de servicios de mudanzas y delivery con FastAPI, PostgreSQL y arquitectura moderna.
 
----
+## Tabla de Contenidos
 
-## 🚀 Tecnologías
-- [Python 3.10+](https://www.python.org/)
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [Uvicorn](https://www.uvicorn.org/) (servidor ASGI)
-- [SQLAlchemy](https://www.sqlalchemy.org/) o [Tortoise ORM](https://tortoise.github.io/) (según tu proyecto)
-- [Pydantic](https://docs.pydantic.dev/) (validaciones)
+- [Características](#-características)
+- [Tecnologías](#-tecnologías)
+- [Estructura del Proyecto](#️-estructura-del-proyecto)
+- [Instalación y Configuración](#-instalación-y-configuración)
+- [Base de Datos](#️-base-de-datos)
+- [API Endpoints](#-api-endpoints)
+- [Autenticación](#-autenticación)
+- [Documentación](#-documentación)
+- [Despliegue](#-despliegue)
+- [Contribución](#-contribución)
 
----
+##  Características
 
-## 📦 Instalación
+###  Sistema de Autenticación Completo
+- **Registro y login** con JWT tokens
+- **Hash de contraseñas** con bcrypt
+- **Autorización por roles** (cliente, conductor, admin)
+- **Middleware de seguridad** para proteger rutas
 
-### 1. Clonar repositorio
+###  Gestión de Usuarios
+- **Modelo normalizado** con nombre completo
+- **Roles diferenciados** para clientes, conductores y administradores
+- **Perfiles completos** con información de contacto
+
+###  Sistema de Órdenes
+- **CRUD completo** para órdenes
+- **Estados de orden** (pendiente, aceptada, en_curso, completada, cancelada)
+- **Geolocalización** completa (origen y destino)
+- **Cálculos de precio** y tiempo estimado
+- **Seguimiento de órdenes** por cliente
+
+###  Gestión de Conductores
+- **Perfiles de conductor** con licencias tipo E (cumplimiento ANT)
+- **Verificación obligatoria** por administradores
+- **Documentos requeridos**: Licencia escaneada + Certificado de cooperativa
+- **Gestión de vehículos** con documentos de propiedad
+- **Sistema de disponibilidad** con ubicación en tiempo real
+- **Calificaciones** y sistema de reputación
+
+###  Chat y Comunicación
+- **Mensajería** entre cliente y conductor por orden
+- **Sistema de calificaciones** (1-5 estrellas)
+- **Comentarios** en las calificaciones
+- **Historial de conversaciones**
+
+###  Auditoría y Eventos
+- **Sistema de eventos** para tracking de órdenes
+- **Logs de actividad** por usuario
+- **Trazabilidad completa** del flujo de órdenes
+
+###  Cumplimiento ANT (Ecuador)
+- **Verificación de conductores** con licencia tipo E
+- **Documentos obligatorios** para conductores y vehículos
+- **Proceso de verificación** manual por administradores
+- **Solo conductores verificados** pueden aceptar órdenes
+
+##  Tecnologías
+
+### Backend
+- **Python 3.13+** - Lenguaje principal
+- **FastAPI** - Framework web moderno y rápido
+- **Uvicorn** - Servidor ASGI de alto rendimiento
+- **SQLAlchemy 2.0** - ORM async para Python
+- **Pydantic v2** - Validación de datos y serialización
+- **Alembic** - Migraciones de base de datos
+
+### Base de Datos
+- **PostgreSQL** - Base de datos relacional robusta
+- **asyncpg** - Driver async para PostgreSQL
+- **JSONB** - Soporte nativo para datos JSON
+
+### Seguridad
+- **JWT** - Tokens de autenticación
+- **bcrypt** - Hash de contraseñas
+- **CORS** - Configuración de cross-origin
+- **Pydantic** - Validación y sanitización de datos
+
+##  Estructura del Proyecto
+
+```
+Moverly_Backend/
+├── 📁 app/                          # Aplicación principal
+│   ├── 📁 core/                     # Configuración central
+│   │   ├── __init__.py
+│   │   ├── config.py               # Configuración de la app
+│   │   └── security.py             # JWT y seguridad
+│   ├── 📁 db/                      # Base de datos
+│   │   ├── __init__.py
+│   │   └── session.py              # Configuración de sesiones
+│   ├── 📁 models/                  # Modelos SQLAlchemy
+│   │   ├── __init__.py
+│   │   ├── base.py                 # Base para todos los modelos
+│   │   ├── user.py                 # Modelo de usuarios
+│   │   ├── order.py                # Modelo de órdenes
+│   │   ├── driver.py               # Modelo de conductores
+│   │   └── chat_rating.py          # Modelo de chat y calificaciones
+│   ├── 📁 routes/                  # Endpoints de la API
+│   │   ├── __init__.py
+│   │   ├── auth.py                 # Autenticación
+│   │   ├── users.py                # Gestión de usuarios
+│   │   ├── orders.py               # Gestión de órdenes
+│   │   ├── drivers.py              # Gestión de conductores
+│   │   └── chat_ratings.py         # Chat y calificaciones
+│   ├── 📁 schemas/                 # Esquemas Pydantic
+│   │   ├── __init__.py
+│   │   ├── auth.py                 # Esquemas de autenticación
+│   │   ├── user.py                 # Esquemas de usuarios
+│   │   ├── order.py                # Esquemas de órdenes
+│   │   ├── driver.py               # Esquemas de conductores
+│   │   └── chat_rating.py          # Esquemas de chat y calificaciones
+│   ├── 📁 services/                # Lógica de negocio
+│   │   ├── __init__.py
+│   │   ├── auth_service.py         # Servicios de autenticación
+│   │   ├── order_service.py        # Servicios de órdenes
+│   │   ├── driver_service.py       # Servicios de conductores
+│   │   └── chat_rating_service.py  # Servicios de chat y calificaciones
+│   ├── 📁 utils/                   # Utilidades generales
+│   │   └── __init__.py
+│   └── main.py                     # Punto de entrada de la app
+├── 📁 docs/                        # Documentación
+│   └── API_DOCUMENTATION.md        # Documentación técnica detallada
+├── 📁 alembic/                     # Migraciones de base de datos
+│   ├── versions/                   # Archivos de migración
+│   ├── env.py                      # Configuración de Alembic
+│   └── script.py.mako              # Template de migraciones
+├── 📄 main.py                      # Punto de entrada principal
+├── 📄 requirements.txt             # Dependencias de Python
+├── 📄 alembic.ini                  # Configuración de Alembic
+├── 📄 env.example                  # Ejemplo de variables de entorno
+└── 📄 README.md                    # Este archivo
+```
+
+## Instalación y Configuración
+
+### Prerrequisitos
+
+- **Python 3.13+**
+- **PostgreSQL 12+**
+- **Git**
+
+### 1. Clonar el Repositorio
+
 ```bash
-git clone https://github.com/TU-USUARIO/moverly-backend.git
-cd moverly-backend
+git clone <url-del-repositorio>
+cd Moverly_Backend
+```
+
+### 2. Configurar Entorno Virtual
+
+```bash
+# Crear entorno virtual
+python -m venv venv
+
+# Activar entorno virtual
+# En Windows:
+venv\Scripts\activate
+# En Linux/Mac:
+source venv/bin/activate
+```
+
+### 3. Instalar Dependencias
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configurar Base de Datos
+
+#### Crear Base de Datos PostgreSQL
+
+```sql
+-- Conectar a PostgreSQL como superusuario
+psql -U postgres
+
+-- Crear base de datos
+CREATE DATABASE moverly;
+
+-- Crear usuario (opcional)
+CREATE USER moverly_user WITH PASSWORD 'tu_contraseña';
+GRANT ALL PRIVILEGES ON DATABASE moverly TO moverly_user;
+```
+
+### 5. Configurar Variables de Entorno
+
+```bash
+# Copiar archivo de ejemplo
+cp env.example .env
+
+# Editar archivo .env con tus configuraciones
+```
+
+**Contenido del archivo `.env`:**
+
+```env
+# Configuración del Entorno
+ENV=dev
+
+# Base de Datos PostgreSQL
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/moverly
+
+# Seguridad JWT
+SECRET_KEY=tu-clave-secreta-muy-segura-cambiar-en-produccion
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+JWT_ALGORITHM=HS256
+
+# Configuración de la Aplicación
+APP_NAME=Moverly Backend
+DEBUG=True
+```
+
+### 6. Ejecutar el Servidor
+
+```bash
+# Modo desarrollo (con recarga automática)
+uvicorn main:app --reload
+
+# Modo producción
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+### 7. Verificar Instalación
+
+- **API**: http://localhost:8000
+- **Documentación Swagger**: http://localhost:8000/docs
+- **Documentación ReDoc**: http://localhost:8000/redoc
+- **Health Check**: http://localhost:8000/health
+
+## Base de Datos
+
+### Modelo de Datos
+
+El sistema utiliza **8 tablas principales** con relaciones bien definidas:
+
+1. **`usuarios`** - Información de usuarios (clientes, conductores, admin)
+2. **`perfil_conductor`** - Perfil específico de conductores
+3. **`vehiculos`** - Vehículos de los conductores
+4. **`ordenes`** - Órdenes de servicio
+5. **`eventos_orden`** - Historial de eventos de órdenes
+6. **`mensajes_chat`** - Mensajes entre cliente y conductor
+7. **`disponibilidad_conductor`** - Estado de disponibilidad de conductores
+8. **`calificaciones`** - Sistema de calificaciones
+
+### Migraciones con Alembic
+
+```bash
+# Inicializar Alembic (solo primera vez)
+alembic init alembic
+
+# Crear nueva migración
+alembic revision --autogenerate -m "Descripción del cambio"
+
+# Aplicar migraciones
+alembic upgrade head
+
+# Ver historial de migraciones
+alembic history
+
+# Revertir migración
+alembic downgrade -1
+```
+
+### Creación Automática de Tablas (Desarrollo)
+
+En modo desarrollo, las tablas se crean automáticamente al iniciar la aplicación. Para producción, usar Alembic.
+
+##  API Endpoints
+
+### Autenticación (`/auth`)
+
+| Método | Endpoint | Descripción | Autenticación |
+|--------|----------|-------------|---------------|
+| POST | `/auth/register` | Registro de usuario | No |
+| POST | `/auth/login` | Inicio de sesión | No |
+
+### Usuarios (`/users`)
+
+| Método | Endpoint | Descripción | Autenticación |
+|--------|----------|-------------|---------------|
+| GET | `/users/me` | Perfil del usuario autenticado | Sí |
+
+### Órdenes (`/orders`)
+
+| Método | Endpoint | Descripción | Autenticación |
+|--------|----------|-------------|---------------|
+| POST | `/orders/` | Crear nueva orden | Sí (Cliente) |
+| GET | `/orders/` | Listar mis órdenes | Sí |
+| GET | `/orders/{order_id}` | Detalle de orden específica | Sí |
+| PATCH | `/orders/{order_id}/status` | Actualizar estado de orden | Sí |
+| DELETE | `/orders/{order_id}` | Eliminar orden | Sí (Cliente) |
+
+### Conductores (`/drivers`)
+
+| Método | Endpoint | Descripción | Autenticación |
+|--------|----------|-------------|---------------|
+| POST | `/drivers/profile` | Crear/actualizar perfil conductor | Sí (Conductor) |
+| POST | `/drivers/vehicles` | Agregar vehículo | Sí (Conductor) |
+| GET | `/drivers/vehicles` | Listar mis vehículos | Sí (Conductor) |
+| PUT | `/drivers/availability` | Actualizar disponibilidad | Sí (Conductor) |
+
+### Chat y Calificaciones (`/chat`)
+
+| Método | Endpoint | Descripción | Autenticación |
+|--------|----------|-------------|---------------|
+| POST | `/chat/{order_id}/messages` | Enviar mensaje | Sí |
+| GET | `/chat/{order_id}/messages` | Listar mensajes de orden | Sí |
+| POST | `/chat/{order_id}/ratings` | Crear calificación | Sí |
+
+### Administración (`/admin`)
+
+| Método | Endpoint | Descripción | Autenticación |
+|--------|----------|-------------|---------------|
+| GET | `/admin/stats` | Estadísticas del sistema | Sí (Admin) |
+| GET | `/admin/drivers/pending` | Conductores pendientes de verificación | Sí (Admin) |
+| POST | `/admin/drivers/verify` | Verificar o rechazar conductor | Sí (Admin) |
+| GET | `/admin/drivers/{driver_id}/profile` | Perfil detallado de conductor | Sí (Admin) |
+| GET | `/admin/drivers/verified` | Lista de conductores verificados | Sí (Admin) |
+| GET | `/admin/drivers/all` | Todos los conductores | Sí (Admin) |
+| PUT | `/admin/drivers/{driver_id}/documents` | Actualizar documentos de conductor | Sí (Admin) |
+
+## 🔐 Autenticación
+
+### Flujo de Autenticación
+
+1. **Registro**: El usuario se registra con email, contraseña y nombre completo
+2. **Login**: El usuario inicia sesión y recibe un JWT token
+3. **Autorización**: El token se incluye en el header `Authorization: Bearer <token>`
+
+### Flujo de Verificación de Conductor (Cumplimiento ANT)
+
+1. **Registro**: Conductor se registra con rol "conductor"
+2. **Perfil**: Crea perfil con licencia tipo E y documentos
+3. **Documentos**: Sube licencia escaneada y certificado de cooperativa
+4. **Revisión**: Administrador revisa documentos manualmente
+5. **Verificación**: Admin aprueba o rechaza (con comentarios)
+6. **Activación**: Solo conductores verificados pueden aceptar órdenes
+
+### Estructura del Token JWT
+
+```json
+{
+  "sub": "user-uuid",
+  "exp": 1640995200,
+  "iat": 1640908800
+}
+```
+
+### Ejemplo de Uso
+
+```bash
+# Registro
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "correo": "usuario@example.com",
+    "contrasena": "password123",
+    "nombre_completo": "Juan Pérez",
+    "rol": "cliente"
+  }'
+
+# Login
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "correo": "usuario@example.com",
+    "contrasena": "password123"
+  }'
+
+# Usar token en requests
+curl -X GET http://localhost:8000/users/me \
+  -H "Authorization: Bearer <tu-token-jwt>"
+```
+
+##  Documentación
+
+### Documentación Interactiva
+
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### Documentación Técnica
+
+- **API Completa**: Ver `docs/API_DOCUMENTATION.md`
+- **Modelos de Datos**: Documentación detallada de todas las tablas
+- **Endpoints**: Especificación completa de la API
+- **Flujos de Negocio**: Procesos y casos de uso
+
+##  Despliegue
+
+### Desarrollo
+
+```bash
+# Con recarga automática
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Producción
+
+```bash
+# Con múltiples workers
+uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+
+# Con Gunicorn (recomendado para producción)
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
+```
+
+### Docker (Opcional)
+
+```dockerfile
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar requirements y instalar dependencias de Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar código de la aplicación
+COPY . .
+
+# Exponer puerto
+EXPOSE 8000
+
+# Comando por defecto
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### Variables de Entorno para Producción
+
+```env
+ENV=production
+DATABASE_URL=postgresql+asyncpg://user:pass@db-host:5432/moverly_prod
+SECRET_KEY=clave-super-segura-para-produccion
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+JWT_ALGORITHM=HS256
+DEBUG=False
+```
+
+## 🧪 Testing
+
+### Estructura de Tests
+
+```
+tests/
+├── conftest.py              # Configuración de pytest
+├── test_auth.py             # Tests de autenticación
+├── test_orders.py           # Tests de órdenes
+├── test_drivers.py          # Tests de conductores
+├── test_chat_ratings.py     # Tests de chat y calificaciones
+└── fixtures/                # Datos de prueba
+```
+
+### Ejecutar Tests
+
+```bash
+# Todos los tests
+pytest
+
+# Tests con cobertura
+pytest --cov=app
+
+# Tests específicos
+pytest tests/test_auth.py
+
+# Tests con verbose
+pytest -v
+```
+
+## Configuración Avanzada
+
+### CORS
+
+Para configurar CORS en producción:
+
+```python
+# En app/main.py
+origins = [
+    "https://tu-frontend.com",
+    "https://app.moverly.com"
+]
+```
+
+### Logging
+
+```python
+# Configurar logging personalizado
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+```
+
+### Rate Limiting
+
+```python
+# Instalar: pip install slowapi
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.post("/auth/login")
+@limiter.limit("5/minute")
+async def login(request: Request, ...):
+    # endpoint logic
+```
+
+## Monitoreo
+
+### Health Checks
+
+- **Basic**: `GET /`
+- **Health**: `GET /health`
+
+### Métricas (Futuro)
+
+- Prometheus metrics
+- Application Performance Monitoring (APM)
+- Log aggregation con ELK Stack
+
+## Contribución
+
+### Flujo de Contribución
+
+1. Fork del repositorio
+2. Crear branch para feature: `git checkout -b feature/nueva-funcionalidad`
+3. Commit cambios: `git commit -m "Agregar nueva funcionalidad"`
+4. Push al branch: `git push origin feature/nueva-funcionalidad`
+5. Crear Pull Request
+
+### Estándares de Código
+
+- **PEP 8** para estilo de código Python
+- **Type hints** en todas las funciones
+- **Docstrings** para documentación
+- **Tests** para nuevas funcionalidades
+
+### Estructura de Commits
+
+```
+feat: agregar sistema de notificaciones push
+fix: corregir validación de email en registro
+docs: actualizar documentación de API
+test: agregar tests para endpoint de órdenes
+refactor: optimizar consultas de base de datos
+```
+
+---
+
+## Checklist de Instalación
+
+- [ ] Python 3.13+ instalado
+- [ ] PostgreSQL instalado y corriendo
+- [ ] Repositorio clonado
+- [ ] Entorno virtual creado y activado
+- [ ] Dependencias instaladas (`pip install -r requirements.txt`)
+- [ ] Base de datos PostgreSQL creada
+- [ ] Archivo `.env` configurado
+- [ ] Servidor ejecutándose (`uvicorn main:app --reload`)
+- [ ] Documentación accesible en http://localhost:8000/docs
+- [ ] Health check funcionando en http://localhost:8000/health
+
+## Próximos Pasos
+
+- [ ] Implementar notificaciones push
+- [ ] Agregar WebSockets para chat en tiempo real
+- [ ] Integrar sistema de pagos
+- [ ] Implementar tracking GPS en tiempo real
+- [ ] Agregar sistema de reportes y analytics
+- [ ] Optimizar consultas con índices adicionales
+- [ ] Implementar caché con Redis
+- [ ] Agregar tests de integración
+- [ ] Configurar CI/CD pipeline
+- [ ] Implementar logging estructurado
+
+c:\Users\vkmpa\AppData\Local\Packages\MicrosoftWindows.Client.Core_cw5n1h2txyewy\TempState\ScreenClip\{7AB945A2-E932-4E8E-A029-967E645C44C4}.png
