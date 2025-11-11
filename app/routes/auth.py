@@ -22,11 +22,21 @@ async def register(payload: RegisterRequest, session: AsyncSession = Depends(get
     if existing.scalar_one_or_none() is not None:
         raise HTTPException(status_code=400, detail="Correo ya registrado")
 
+    # Server-side guard: never allow public registration to create an admin.
+    # Even if a crafted request tries to sneak 'admin', coerce to 'cliente'.
+    requested_role = getattr(payload, "rol", "cliente")
+    if requested_role == "admin":
+        # Option: reject explicitly or coerce. We coerce to 'cliente' to be
+        # tolerant, but you could raise HTTPException(403) instead.
+        requested_role = "cliente"
+
+    # Normalize full name from first + last
+    full_name = f"{payload.first_name.strip()} {payload.last_name.strip()}"
     user = User(
         correo=payload.correo,
         contrasena_hash=hash_password(payload.contrasena),
-        nombre_completo=payload.nombre_completo,
-        rol=UserRole(payload.rol),
+        nombre_completo=full_name,
+        rol=UserRole(requested_role),
         activo=True,
     )
     session.add(user)

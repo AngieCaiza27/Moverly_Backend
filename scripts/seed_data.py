@@ -31,6 +31,7 @@ async def create_sample_data():
             print("👥 Creando usuarios...")
             
             # Cliente de prueba
+            cliente_first, cliente_last = "Juan", "Pérez"
             cliente = User(
                 id=uuid.uuid4(),
                 correo="cliente@example.com",
@@ -38,31 +39,33 @@ async def create_sample_data():
                 contrasena_hash=hash_password("password123"),
                 # Use the Enum value (Spanish) to match the DB ENUM
                 rol=UserRole.client.value,
-                nombre_completo="Juan Pérez",
+                nombre_completo=f"{cliente_first} {cliente_last}",
                 activo=True
             )
             session.add(cliente)
             
             # Conductor de prueba
+            conductor_first, conductor_last = "Carlos", "González"
             conductor = User(
                 id=uuid.uuid4(),
                 correo="conductor@example.com",
                 telefono="+1234567891",
                 contrasena_hash=hash_password("password123"),
                 rol=UserRole.driver.value,
-                nombre_completo="Carlos González",
+                nombre_completo=f"{conductor_first} {conductor_last}",
                 activo=True
             )
             session.add(conductor)
             
             # Admin de prueba
+            admin_first, admin_last = "María", "Admin"
             admin = User(
                 id=uuid.uuid4(),
                 correo="admin@example.com",
                 telefono="+1234567892",
                 contrasena_hash=hash_password("password123"),
                 rol=UserRole.admin.value,
-                nombre_completo="María Admin",
+                nombre_completo=f"{admin_first} {admin_last}",
                 activo=True
             )
             session.add(admin)

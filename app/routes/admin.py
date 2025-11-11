@@ -21,6 +21,11 @@ from app.schemas.admin import (
     AdminStatsOut,
     DocumentUploadOut
 )
+from app.schemas.admin import AdminCreate
+from app.core.security import hash_password
+from app.schemas.admin import AdminCreateDriver
+from app.schemas.driver import VehicleCreate
+from app.models.driver import DriverProfile, Vehicle
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -243,6 +248,102 @@ async def get_all_drivers(
         )
         for driver in drivers
     ]
+
+
+
+
+@router.post("/create", status_code=status.HTTP_201_CREATED)
+async def create_admin(
+    payload: AdminCreate,
+    session: AsyncSession = Depends(get_session),
+    current_user=Depends(verify_admin)
+):
+    """Crear un usuario administrador (solo admin puede hacerlo)."""
+
+    # Evitar duplicados
+    existing = await session.execute(select(User).where(User.correo == payload.correo))
+    if existing.scalar_one_or_none() is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Correo ya registrado")
+
+    full_name = f"{payload.first_name.strip()} {payload.last_name.strip()}"
+    user = User(
+        correo=payload.correo,
+        contrasena_hash=hash_password(payload.contrasena),
+        nombre_completo=full_name,
+        rol=UserRole.admin,
+        activo=True,
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    return {"id": user.id, "correo": user.correo, "nombre_completo": user.nombre_completo, "rol": str(user.rol)}
+
+
+
+@router.post("/create_driver", status_code=status.HTTP_201_CREATED)
+async def create_driver(
+    payload: AdminCreateDriver,
+    session: AsyncSession = Depends(get_session),
+    current_user=Depends(verify_admin)
+):
+    """Crear un conductor completo (usuario + profile + vehicles). Solo admin."""
+
+    # Chequear duplicado
+    existing = await session.execute(select(User).where(User.correo == payload.correo))
+    if existing.scalar_one_or_none() is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Correo ya registrado")
+
+    # Crear usuario conductor
+    full_name = f"{payload.first_name.strip()} {payload.last_name.strip()}"
+    user = User(
+        correo=payload.correo,
+        contrasena_hash=hash_password(payload.contrasena),
+        nombre_completo=full_name,
+        rol=UserRole.driver,
+        telefono=payload.telefono,
+        activo=True,
+    )
+    session.add(user)
+    await session.flush()  # obtener user.id antes del commit
+
+    # Crear driver profile
+    profile_data = payload.profile.model_dump() if hasattr(payload.profile, 'model_dump') else payload.profile
+    profile = DriverProfile(
+        usuario_id=user.id,
+        licencia_numero=profile_data.get('licencia_numero'),
+        licencia_categoria=profile_data.get('licencia_categoria'),
+        licencia_vigente=profile_data.get('licencia_vigente', False),
+        licencia_documento=profile_data.get('licencia_documento'),
+        documento_respaldo=profile_data.get('documento_respaldo'),
+    )
+    session.add(profile)
+
+    # Crear vehículos opcionales
+    created_vehicles = []
+    if payload.vehicles:
+        for v in payload.vehicles:
+            vc = Vehicle(
+                conductor_id=user.id,
+                placa=v.get('placa'),
+                tipo=v.get('tipo'),
+                capacidad_kg=v.get('capacidad_kg'),
+                documento_respaldo=v.get('documento_respaldo')
+            )
+            session.add(vc)
+            created_vehicles.append(vc)
+
+    await session.commit()
+    await session.refresh(profile)
+
+    return {
+        "id": user.id,
+        "correo": user.correo,
+        "nombre_completo": user.nombre_completo,
+        "rol": str(user.rol),
+        "profile": profile,
+        "vehicles": created_vehicles
+    }
 
 
 @router.put("/drivers/{driver_id}/documents", response_model=DocumentUploadOut)

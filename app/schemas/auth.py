@@ -9,8 +9,13 @@ from pydantic import BaseModel, EmailStr, Field
 class RegisterRequest(BaseModel):
     correo: EmailStr
     contrasena: str = Field(min_length=6)
-    nombre_completo: str = Field(min_length=1, max_length=255)
-    rol: Literal["cliente", "conductor", "admin"] = "cliente"
+    # Split name to first + last for better normalization
+    first_name: str = Field(min_length=1, max_length=128)
+    last_name: str = Field(min_length=1, max_length=128)
+    # Do not expose 'admin' as a valid value for public registration.
+    # Only allow 'cliente' or 'conductor' here; admins must be created
+    # by an existing privileged user or via a protected admin flow.
+    rol: Literal["cliente", "conductor"] = "cliente"
 
 
 class LoginRequest(BaseModel):

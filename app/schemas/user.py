@@ -7,7 +7,8 @@ from pydantic import BaseModel, EmailStr
 class UserBase(BaseModel):
     correo: EmailStr
     telefono: str | None = None
-    nombre_completo: str
+    first_name: str | None = None
+    last_name: str | None = None
     rol: str
     activo: bool = True
 
@@ -15,7 +16,8 @@ class UserBase(BaseModel):
 class UserCreate(BaseModel):
     correo: EmailStr
     contrasena: str
-    nombre_completo: str
+    first_name: str
+    last_name: str
     rol: str = "cliente"
 
 

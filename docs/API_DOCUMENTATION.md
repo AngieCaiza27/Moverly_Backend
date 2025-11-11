@@ -320,5 +320,14 @@ pytest --cov=app tests/
 ### Consideraciones Futuras
 - Redis para caché
 - WebSockets para chat en tiempo real
+
+WebSocket chat
+----------------
+
+Endpoint: `/ws/chat/{order_id}`
+
+- Conexión: aceptar WebSocket y pasar token JWT como query param `?token=...` para autenticación.
+- Mensajes: mensajes recibidos como texto se persisten en la base de datos y se difunden a todos los clientes conectados a la misma `order_id`.
+- Nota: Implementación in-memory; en despliegues multi-worker usar Pub/Sub (Redis) para broadcasting.
 - Microservicios para funcionalidades específicas
 - Load balancing con múltiples workers

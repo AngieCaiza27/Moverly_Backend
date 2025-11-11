@@ -151,6 +151,7 @@ python scripts/seed_data.py
 #### Funcionalidades Futuras
 - [ ] Notificaciones push
 - [ ] WebSockets para chat en tiempo real
+- [x] WebSockets para chat en tiempo real (endpoint `/ws/chat/{order_id}` implementado in-memory)
 - [ ] Sistema de pagos integrado
 - [ ] Tracking GPS en tiempo real
 - [ ] Sistema de reportes y analytics

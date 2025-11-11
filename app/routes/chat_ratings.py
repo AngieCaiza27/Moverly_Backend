@@ -12,7 +12,7 @@ from app.models.chat_rating import ChatMessage, Rating
 from app.schemas.chat_rating import ChatMessageCreate, ChatMessageOut, RatingCreate, RatingOut
 
 
-router = APIRouter(prefix="/chat", tags=["chat", "ratings"])
+router = APIRouter(prefix="/chat", tags=["chat"])  # keep router tag for chat messages
 
 
 @router.post("/{order_id}/messages", response_model=ChatMessageOut, status_code=status.HTTP_201_CREATED)
@@ -30,7 +30,7 @@ async def list_messages(order_id: uuid.UUID, session: AsyncSession = Depends(get
     return list(result.scalars().all())
 
 
-@router.post("/{order_id}/ratings", response_model=RatingOut, status_code=status.HTTP_201_CREATED)
+@router.post("/{order_id}/ratings", response_model=RatingOut, status_code=status.HTTP_201_CREATED, tags=["ratings"])
 async def create_rating(order_id: uuid.UUID, payload: RatingCreate, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
     rating = Rating(
         orden_id=order_id,

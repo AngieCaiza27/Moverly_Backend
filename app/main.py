@@ -13,12 +13,18 @@ from app.routes.orders import router as orders_router
 from app.routes.drivers import router as drivers_router
 from app.routes.chat_ratings import router as chat_router
 from app.routes.admin import router as admin_router
+from app.routes.ws_chat import router as ws_chat_router
 
 # Crear la app
 app = FastAPI(
     title="Moverly Backend",
     description="API proyecto Moverly 🚚⚡",
-    version="1.0.0"
+    version="1.0.0",
+    # Force the OpenAPI "servers" entry to localhost for the Swagger UI so
+    # the browser issues requests to a reachable URL (127.0.0.1) even when
+    # Uvicorn is listening on 0.0.0.0. This prevents Swagger "Failed to fetch"
+    # errors caused by an invalid 0.0.0.0 base URL.
+    servers=[{"url": "http://127.0.0.1:8000"}],
 )
 
 # Configuración de CORS
@@ -60,3 +66,4 @@ app.include_router(orders_router)
 app.include_router(drivers_router)
 app.include_router(chat_router)
 app.include_router(admin_router)
+app.include_router(ws_chat_router)

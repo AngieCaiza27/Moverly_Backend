@@ -37,7 +37,14 @@ async def create_order(
     session.add(order)
     await session.commit()
     await session.refresh(order)
-    return order
+    # Return a response model with estado as its string value to satisfy
+    # the Literal type used in the schema (Pydantic v2 enforces exact literals).
+    return OrderOut(
+        id=order.id,
+        cliente_id=order.cliente_id,
+        conductor_id=order.conductor_id,
+        estado=order.estado.value if order.estado is not None else None,
+    )
 
 
 @router.get("/", response_model=list[OrderOut])
@@ -46,7 +53,16 @@ async def list_my_orders(
     current_user=Depends(get_current_user),
 ):
     result = await session.execute(select(Order).where(Order.cliente_id == current_user.id))
-    return list(result.scalars().all())
+    orders = list(result.scalars().all())
+    return [
+        OrderOut(
+            id=o.id,
+            cliente_id=o.cliente_id,
+            conductor_id=o.conductor_id,
+            estado=o.estado.value if o.estado is not None else None,
+        )
+        for o in orders
+    ]
 
 
 @router.get("/{order_id}", response_model=OrderOut)
@@ -55,7 +71,12 @@ async def get_order(order_id: uuid.UUID, session: AsyncSession = Depends(get_ses
     order = result.scalar_one_or_none()
     if order is None:
         raise HTTPException(status_code=404, detail="Orden no encontrada")
-    return order
+    return OrderOut(
+        id=order.id,
+        cliente_id=order.cliente_id,
+        conductor_id=order.conductor_id,
+        estado=order.estado.value if order.estado is not None else None,
+    )
 
 
 @router.patch("/{order_id}/status", response_model=OrderOut)
@@ -67,7 +88,12 @@ async def update_status(order_id: uuid.UUID, payload: OrderUpdateStatus, session
     order.estado = OrderStatus(payload.estado)
     await session.commit()
     await session.refresh(order)
-    return order
+    return OrderOut(
+        id=order.id,
+        cliente_id=order.cliente_id,
+        conductor_id=order.conductor_id,
+        estado=order.estado.value if order.estado is not None else None,
+    )
 
 
 @router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Literal
 from pydantic import BaseModel, Field
+from app.schemas.driver import DriverProfileCreate
 
 
 class DriverVerificationRequest(BaseModel):
@@ -64,3 +65,53 @@ class DocumentUploadOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AdminCreate(BaseModel):
+    correo: str
+    contrasena: str = Field(min_length=8)
+    first_name: str = Field(min_length=1, max_length=128)
+    last_name: str = Field(min_length=1, max_length=128)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "correo": "admin@example.com",
+                "contrasena": "SuperSecret123",
+                "first_name": "Admin",
+                "last_name": "Uno"
+            }
+        }
+
+
+class AdminCreateDriver(BaseModel):
+    correo: str
+    contrasena: str = Field(min_length=8)
+    first_name: str = Field(min_length=1, max_length=128)
+    last_name: str = Field(min_length=1, max_length=128)
+    telefono: str | None = None
+    profile: DriverProfileCreate
+    vehicles: list[dict] | None = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "correo": "driver@example.com",
+                "contrasena": "DriverPass123",
+                "nombre_completo": "Juana Conductor",
+                "telefono": "+59399999999",
+                "profile": {
+                    "licencia_numero": "ABC12345",
+                    "licencia_categoria": "E",
+                    "licencia_vigente": True,
+                    "licencia_documento": "https://.../licencia.jpg"
+                },
+                "vehicles": [
+                    {
+                        "placa": "PST-123",
+                        "tipo": "camión",
+                        "capacidad_kg": 2000
+                    }
+                ]
+            }
+        }

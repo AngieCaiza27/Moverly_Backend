@@ -14,11 +14,12 @@ async def get_user_by_email(session: AsyncSession, correo: str) -> Optional[User
     return result.scalar_one_or_none()
 
 
-async def register_user(session: AsyncSession, correo: str, contrasena: str, nombre_completo: str, rol: str) -> User:
+async def register_user(session: AsyncSession, correo: str, contrasena: str, first_name: str, last_name: str, rol: str) -> User:
+    full_name = f"{first_name.strip()} {last_name.strip()}"
     user = User(
         correo=correo,
         contrasena_hash=hash_password(contrasena),
-        nombre_completo=nombre_completo,
+        nombre_completo=full_name,
         rol=UserRole(rol),
         activo=True,
     )
