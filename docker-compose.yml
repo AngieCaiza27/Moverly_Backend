@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: moverly
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Servicio temporal para ejecutar migraciones y poblar datos de prueba
+  db-init:
+    image: python:3.11-slim
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./:/app:cached
+    working_dir: /app
+    env_file:
+      - .env.docker
+    environment:
+      # Forcing the DB host to the compose service network name (psycopg async)
+      - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/moverly
+    command: >
+      bash -lc "pip install --no-cache-dir -r requirements.txt && alembic upgrade head && python scripts/seed_data.py"
+    restart: 'no'
+
+volumes:
+  db_data:
